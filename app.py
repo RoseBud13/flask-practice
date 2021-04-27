@@ -1,0 +1,316 @@
+from flask import Flask
+from flask import render_template
+from flask import request
+from flask import url_for
+from flask import redirect
+from flask import flash
+from flask_sqlalchemy import SQLAlchemy
+from markupsafe import escape
+
+import os
+import sys
+import click
+
+# create a Flask object
+app = Flask(__name__, static_url_path='/static')
+
+
+# ---------------------------------------------Flask基础路由、传参等功能展示------------------------------
+
+
+# 主页，快捷切换不同展示页面
+@app.route('/home')
+def home():
+    return render_template('home_page.html')
+
+
+# create URL via route()
+# the request of '/' turns into the call of hello()
+# the function hello() returns a string text and rendered in the browser
+@app.route('/')
+def hello():
+    return 'hello world'
+
+
+# the function embedded_html returns a full html code
+# which is the original way to insert html
+@app.route('/embedded-html')
+def embedded_html():
+    user = {'username': 'Andy', 'age': '22'}
+    return f'''
+    <html>
+        <head>
+            <title>Templating</title>
+        </head>
+        <body>
+            <h1>Hello, ''' + user['username'] + '''! you’re ''' + user['age'] + ''' years old.</h1>
+            <br>
+            <form action="/home">
+                <button type="submit">Home</button>
+            </form>
+        </body>
+    </html>
+    '''
+
+
+# insert a html form with submit to trigger a default GET request
+# parameter can be passed by the url
+@app.route('/pass-parameter')
+def pass_parameter():
+    key = request.values.get('key')
+    return f'''
+    <form action='/redirect'>
+        Username: <input name='username' value='{key}'>
+        <br>
+        Password: <input name='pwd'>
+        <br>
+        <input type='submit'>
+    </form>
+    <br>
+    <form action="/home">
+        <button type="submit">Home</button>
+    </form>
+    '''
+
+
+@app.route('/redirect')
+def show():
+    name = request.values.get('username')
+    pwd = request.values.get('pwd')
+    return f'''
+    <p>Username={name}, Password={pwd}</p>
+    <br>
+    <form action="/home">
+        <button type="submit">Home</button>
+    </form>
+    '''
+
+
+# use independent html template to render web page
+# by calling render_template()
+# parameter can be passed via URL
+@app.route('/temp')
+@app.route('/temp/<name>')
+def temp(name=None):
+    return render_template('index.html', name=name)
+
+
+# 用户输入的数据会包含恶意代码，所以不能直接作为响应返回
+# 需要使用escape()函数对username变量进行转义处理
+# 比如把 < 转换成 &lt;
+# 这样在返回响应时浏览器就不会把它们当做代码执行
+@app.route('/user/<username>')
+def profile(username):
+    return '{}\'s profile is shown here'.format(escape(username))
+
+
+# url_for() for url building
+# with app.test_request_context():
+#    print(url_for('profile', username='url-test'))
+
+
+# http methods
+@app.route('/form', methods=['GET', 'POST'])
+def http_method():
+    if request.method == 'POST':
+        return show_the_form()
+    else:
+        return render_template('form.html')
+
+
+# Use request.form to access the data transmitted in a POST/PUT request
+def show_the_form():
+    username = request.form['username']
+    email = request.form['email']
+    hobbies = request.form['hobbies']
+    return redirect(url_for('show_form',
+                            username=username,
+                            email=email,
+                            hobbies=hobbies))
+
+
+# Use request.args.get to access the parameters submitted in the URL(?key=value)
+@app.route('/show_form', methods=['GET'])
+def show_form():
+    username = request.args.get('username')
+    email = request.args.get('email')
+    hobbies = request.args.get('hobbies')
+    return render_template('show_form.html',
+                           username=username,
+                           email=email,
+                           hobbies=hobbies)
+
+
+# Use static folder to serve CSS and JS code
+@app.route('/full')
+def show_full_page():
+    return render_template('full.html')
+
+
+# ----------------------------------------------数据库引入---------------------------------------
+# 如果是 Windows 系统，使用三个斜线
+# 否则使用四个斜线
+WIN = sys.platform.startswith('win')
+if WIN:
+    prefix = 'sqlite:///'
+else:
+    prefix = 'sqlite:////'
+
+
+# 写入一个 SQLALCHEMY_DATABASE_URI 变量
+# 来告诉 SQLAlchemy 数据库连接地址
+# we use SQLite for example here
+# 关闭对模型修改的监控: SQLALCHEMY_TRACK_MODIFICATIONS set to false
+# 在扩展类实例化前加载配置
+app.config['SQLALCHEMY_DATABASE_URI'] = prefix + os.path.join(app.root_path, 'data.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
+# 在扩展类实例化前加载配置
+# 初始化数据库扩展，传入程序实例 app
+db = SQLAlchemy(app)
+
+
+# 创建数据库模型
+class User(db.Model):  # 表名将会是 user（自动生成，小写处理）
+    id = db.Column(db.Integer, primary_key=True)  # 主键
+    name = db.Column(db.String(20))  # 名字
+
+
+class Movie(db.Model):  # 表名将会是 movie
+    id = db.Column(db.Integer, primary_key=True)  # 主键
+    title = db.Column(db.String(60))  # 电影标题
+    year = db.Column(db.String(4))  # 电影年份
+
+
+# 自定义一个自动执行创建数据库表的命令
+
+# 注册为命令
+@app.cli.command()
+# 设置选项
+@click.option('--drop', is_flag=True, help='Create after drop.')
+def initdb(drop):
+    """Initialize the database"""
+    # 判断是否输入了选项
+    if drop:
+        db.drop_all()
+    db.create_all()
+    # 输出提示信息
+    click.echo('Initialized database.')
+
+
+@app.cli.command()
+def forge():
+    """Generate fake data."""
+    db.create_all()
+
+    # 全局的两个变量移动到这个函数内
+    name = 'Andy'
+    movies = [
+        {'title': 'My Neighbor Totoro', 'year': '1988'},
+        {'title': 'Dead Poets Society', 'year': '1989'},
+        {'title': 'A Perfect World', 'year': '1993'},
+        {'title': 'Leon', 'year': '1994'},
+        {'title': 'Mahjong', 'year': '1996'},
+        {'title': 'Swallowtail Butterfly', 'year': '1996'},
+        {'title': 'King of Comedy', 'year': '1999'},
+        {'title': 'Devils on the Doorstep', 'year': '1999'},
+        {'title': 'WALL-E', 'year': '2008'},
+        {'title': 'The Pork of Music', 'year': '2012'},
+    ]
+
+    user = User(name=name)
+    db.session.add(user)
+    for m in movies:
+        movie = Movie(title=m['title'], year=m['year'])
+        db.session.add(movie)
+
+    db.session.commit()
+    click.echo('Done.')
+
+
+# 在主页视图读取数据库记录
+@app.route('/data')
+def show_database():
+    user = User.query.first()  # 读取用户记录
+    movies = Movie.query.all()  # 读取所有电影记录
+    return render_template('database.html', user=user, movies=movies)
+
+
+# 自定义404错误页面模板
+# 使用 app.errorhandler() 装饰器注册一个错误处理函数
+# @app.errorhandler(404)
+# def page_not_found(e):
+#     user = User.query.first()
+#     return render_template('404.html', user=user), 404
+
+
+# 注册一个模板上下文处理函数来统一注入每一个模板的上下文环境中
+@app.context_processor
+def inject_user():
+    user = User.query.first()
+    return dict(user=user)
+
+
+@app.context_processor
+def inject_movies():
+    movies = Movie.query.all()
+    return dict(movies=movies)
+
+
+# 基于base.html基模板的继承页面
+@app.route('/watchlist', methods=['GET', 'POST'])
+def watchlist():
+    if request.method == 'POST':
+        title = request.form.get('title')
+        year = request.form.get('year')
+        if not title or not year or len(year) > 4 or len(title) > 60:
+            flash('Invalid input.')
+            return redirect(url_for('watchlist'))
+        movie = Movie(title=title, year=year)
+        db.session.add(movie)
+        db.session.commit()
+        flash('New item created.')
+        return redirect(url_for('watchlist'))
+
+    return render_template('watch-list.html')
+
+
+app.config['SECRET_KEY'] = 'dev'
+
+
+@app.route('/watchlist/movie/edit/<int:movie_id>', methods=['GET', 'POST'])
+def edit(movie_id):
+    movie = Movie.query.get_or_404(movie_id)
+
+    if request.method == 'POST':  # 处理编辑表单的提交请求
+        title = request.form['title']
+        year = request.form['year']
+
+        if not title or not year or len(year) != 4 or len(title) > 60:
+            flash('Invalid input.')
+            return redirect(url_for('edit', movie_id=movie_id))  # 重定向回对应的编辑页面
+
+        movie.title = title  # 更新标题
+        movie.year = year  # 更新年份
+        db.session.commit()  # 提交数据库会话
+        flash('Item updated.')
+        return redirect(url_for('watchlist'))  # 重定向回主页
+
+    return render_template('edit.html', movie=movie)  # 传入被编辑的电影记录
+
+
+@app.route('/watchlist/movie/delete/<int:movie_id>', methods=['POST'])  # 限定只接受 POST 请求
+def delete(movie_id):
+    movie = Movie.query.get_or_404(movie_id)  # 获取电影记录
+    db.session.delete(movie)  # 删除对应的记录
+    db.session.commit()  # 提交数据库会话
+    flash('Item deleted.')
+    return redirect(url_for('watchlist'))  # 重定向回主页
+
+
+# ---------------------------------------------程序执行入口----------------------------------------
+
+
+if __name__ == '__main__':
+    app.run(debug=True, port="8080")
