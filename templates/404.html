@@ -8,14 +8,13 @@
 </head>
 <body>
     <h2>
-        <img alt="Avatar" class="avatar" src="{{ url_for('static', filename='images/avatar.png') }}">
         {{ user.name }}'s Watchlist
     </h2>
     <ul class="movie-list">
         <li>
             Page Not Found - 404
             <span class="float-right">
-                <a href="{{ url_for('database') }}">Go Back</a>
+                <a href="{{ url_for('watchlist') }}">Go Back</a>
             </span>
         </li>
     </ul>

@@ -280,10 +280,9 @@ def show_database():
 
 # 自定义404错误页面模板
 # 使用 app.errorhandler() 装饰器注册一个错误处理函数
-# @app.errorhandler(404)
-# def page_not_found(e):
-#     user = User.query.first()
-#     return render_template('404.html', user=user), 404
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 
 # 注册一个模板上下文处理函数来统一注入每一个模板的上下文环境中
