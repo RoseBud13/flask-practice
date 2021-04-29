@@ -11,7 +11,7 @@
     <p>{{ users|length }} Users</p>
     <ul class="movie-list">
         {% for user in users %}
-        <li>{{ user.name }}</li>
+        <li>{{ user.name }} - {{ user.username }}</li>
         {% endfor %}
     </ul>
     {# 使用 length 过滤器获取 movies 变量的长度 #}
