@@ -244,6 +244,7 @@ def forge():
     click.echo('Done.')
 
 
+# 创建admin user
 @app.cli.command()
 @click.option('--username', prompt=True, help='The username used to login.')
 @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='The password used to login.')
@@ -272,9 +273,9 @@ def admin(username, password):
 # 在主页视图读取数据库记录
 @app.route('/data')
 def show_database():
-    user = User.query.first()  # 读取用户记录
+    users = User.query.all()  # 读取用户记录
     movies = Movie.query.all()  # 读取所有电影记录
-    return render_template('database.html', user=user, movies=movies)
+    return render_template('database.html', users=users, movies=movies)
 
 
 # 自定义404错误页面模板
@@ -288,7 +289,7 @@ def show_database():
 # 注册一个模板上下文处理函数来统一注入每一个模板的上下文环境中
 @app.context_processor
 def inject_user():
-    user = User.query.first()
+    user = current_user
     return dict(user=user)
 
 
@@ -400,7 +401,7 @@ def login():
             flash('Invalid input.')
             return redirect(url_for('login'))
 
-        user = User.query.first()
+        user = User.query.filter_by(username=username).first()
         # 验证用户名和密码是否一致
         if username == user.username and user.validate_password(password):
             login_user(user)  # 登入用户
@@ -411,6 +412,30 @@ def login():
         return redirect(url_for('login'))  # 重定向回登录页面
 
     return render_template('login.html')
+
+
+# 用户signup
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        user = User.query.filter_by(username=username).first()
+
+        if user:
+            flash('Username exists. Try again.')
+            return redirect(url_for('signup'))
+
+        new_user = User(name=name, username=username)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        flash('New user created.')
+        return redirect(url_for('login'))
+
+    return render_template('signup.html')
 
 
 # 用户logout
