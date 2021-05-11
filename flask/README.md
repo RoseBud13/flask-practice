@@ -1,0 +1,1 @@
+# All function test of Flask
