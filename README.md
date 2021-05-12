@@ -21,9 +21,9 @@ If you haven't had python ready on your computer, please check out this: https:/
 * Check Python version
 ```sh
 python --version
-```
+
 or
-```sh
+
 python3 --version
 ```
 
@@ -34,10 +34,10 @@ python -m venv env  # Windows
 python3 -m venv env # Linux 和 macOS
 ```
 
-If you're using Python 2, you need to install virtualenv first to have the virtual environment created.
+  If you're using Python 2, you need to install virtualenv first to have the virtual environment created.
 ```sh
 pip install virtualenv  # Windows
-sudo pip install virtualenv  # Linux 或 macOS
+sudo pip install virtualenv  # Linux or macOS
 ```
 Then create the virtual environment:
 ```sh
@@ -49,7 +49,7 @@ virtualenv env
 env\Scripts\activate  # Windows
 ```
 ```sh
-source ./env/bin/activate
+source ./env/bin/activate # Linux or macOS
 ```
 
 * Install Flask in the virtual environment
