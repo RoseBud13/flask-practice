@@ -4,3 +4,31 @@ Flask is micro web framework written in Python, with no database abstraction lay
 
 The core functions of Flask itself is providing request-response handling and webpage rendering. These two functions are achieved by Werkzeug (a toolkit for Web Server Gateway Interface (WSGI) applications) and Jinja (a template engine, similar to the Django web framework) respectively.
 
+Table of contents
+-----------------
+
+   * [Environment Configration](#environment-configration)
+   * [Core Function](#core-function)
+   * [Database](#database)
+   * [RESTful API](#restful-api)
+
+Environment Configration
+------------------------
+
+to be done
+
+Core Function
+-------------
+
+to be done
+
+Database
+--------
+
+to be done
+
+RESTful API
+-----------
+
+to be done
+
