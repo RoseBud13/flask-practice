@@ -54,7 +54,7 @@ To create a isolated environment for python project, which means each project ha
 
 * Install Flask in the virtual environment
     ```sh
-    pip install Flask
+    (env) pip install Flask
     ```
 
 * Exit the virtual environment
@@ -65,7 +65,60 @@ To create a isolated environment for python project, which means each project ha
 Core Function
 -------------
 
-to be done
+* Source code example
+    ```py
+    from flask import Flask
+    from flask import request, render_template, redirect, url_for
+
+    app = Flask(__name__)
+
+    @app.route('/')
+    def hello():
+        return 'Welcome to Flask'
+    
+    @app.route('/url)
+    def targetToUrl():
+        return 'Hi there.'
+    
+    @app.route('/http-method', methods=['GET', 'POST'])
+    def httpMethod():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        age = request.form.get('age')
+        person = Person(name=name, age=age)
+        return redirect(url_for('httpMethod'))
+
+    return render_template('http-method.html')
+    ```
+
+* Run the program
+    ```sh
+    (env) flask run
+    ```
+    Open 'http://127.0.0.1:5000/' in brower
+    'Welcome to Flask' will show on the webpage.
+
+    Open 'http://127.0.0.1:5000/url' in brower
+    'Hi there' will show up.
+
+    Open 'http://127.0.0.1:5000/http-method' in brower
+    The corresponding HTML file will be returned and rendered, if the POST request is triggered in the HTML, variable value can be passed via the url.
+
+### Request-Response Handling
+
+1. create URL via route()
+2. the first request of '/' turns into the call of hello()
+3. the function hello() returns a string text and rendered in the browser
+4. the second request responses and renders the corresponding url content
+5. the third requrst shows the different http methods and value be passed as parameter.
+
+### Template Rendering
+
+1. the render_template() function renders the html file located in the 'templates' folder which is located in the same root folder with the app.py
+2. the template rendering engine is Jinja2, the Jinja2 program language can be embedded into the HTML
+3. the values and arithmetic logic can also be insserted when rendering.
+4. CSS and some JavaScript file can be stored in a folder called 'static', which is parallelly located with the 'templates' folder.
+
 
 Database
 --------
