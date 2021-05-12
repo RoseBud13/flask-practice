@@ -96,12 +96,15 @@ Core Function
     (env) flask run
     ```
     Open 'http://127.0.0.1:5000/' in brower
+
     'Welcome to Flask' will show on the webpage.
 
     Open 'http://127.0.0.1:5000/url' in brower
+
     'Hi there' will show up.
 
     Open 'http://127.0.0.1:5000/http-method' in brower
+
     The corresponding HTML file will be returned and rendered, if the POST request is triggered in the HTML, variable value can be passed via the url.
 
 ### Request-Response Handling
@@ -123,7 +126,32 @@ Core Function
 Database
 --------
 
-to be done
+* Source code example
+    ```sh
+    (env) pip install sqlalchemy
+    ```
+
+    ```py
+    from flask import Flask
+    from flask import request, render_template, redirect, url_for
+    from flask_sqlalchemy import SQLAlchemy
+    import os
+    import sys
+
+    app = Flask(__name__)
+
+    # In this example we use sqlite as our database
+    # Add a variable called 'SQLALCHEMY_DATABASE_URI' to tell the database connect address of SQLAlchemy
+    # If the device is Windows, change the path to 'sqlite:////'
+    app.config['SQLALCHEMY_DATABASE_URI'] = sqlite:/// + os.path.join(app.root_path, 'data.db')
+
+    # Initialize the database extension with the program entity 'app' passed in
+    db = SQLAlchemy(app)
+
+    # Create the database model
+    # ...
+
+    ```
 
 RESTful API
 -----------
