@@ -7,6 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask.views import MethodView
 from flask_login import LoginManager
 
+import commands
+
 # SQLite URI compatible
 WIN = sys.platform.startswith('win')
 if WIN:
